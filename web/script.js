@@ -1,5 +1,6 @@
 let currentChatFile = null;
-let attachedImageBase64 = null;
+let attachedImageBase64 = null;// Сюда будет попадать фото и из Ctrl+V, и из файла
+let lastAttachedImage = null; // Для картинок из скрепки
 let attachedFileContent = "";
 
 // --- 1. НАСТРОЙКА MARKDOWN ---
@@ -153,16 +154,28 @@ async function addMessage(text, role, imgSrc = null) {
     }
 }
 
-async function handleFile(input) {
-    const file = input.files[0];
+async function handleFileSelect(input) {
+    const file = input.files[0]; // Берем первый файл
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        attachedFileContent = `\n\n[Файл "${file.name}"]:\n${e.target.result}\n`;
-        addMessage(`📎 Файл прикреплен: ${file.name}`, 'user');
-    };
-    reader.readAsText(file);
+
+    // 1. Если это ИЗОБРАЖЕНИЕ (jpg, png, webp)
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            attachedImageBase64 = e.target.result; // Записываем в ту же переменную, что и Ctrl+V
+            addMessage(`[Изображение прикреплено: ${file.name}]`, 'user');
+            console.log("📸 Картинка из файла готова для Llava");
+        };
+        reader.readAsDataURL(file);
+    } 
+    // 2. Если это ТЕКСТ (код, логи и т.д.)
+    else {
+        addMessage(`[Файл прикреплен: ${file.name}]`, 'user');
+        attachedFileContent = await eel.upload_file(file.name)(); // Твоя логика для Llama
+    }
+    input.value = ''; // Сброс инпута
 }
+
 
 async function toggleMic() {
     const btn = document.getElementById('mic-btn');
