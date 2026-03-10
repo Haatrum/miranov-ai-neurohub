@@ -1,0 +1,8 @@
+eel==0.16.0
+ollama==0.1.7
+vosk==0.3.45
+sounddevice==0.4.6
+PyAudio==0.2.14
+SpeechRecognition==3.10.1
+gevent==23.9.1
+zope.interface==6.1
